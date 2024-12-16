@@ -1,0 +1,12 @@
+# Contents of the file: /python-api-converter/python-api-converter/.dockerignore
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.log
+*.env
+*.git
+*.gitignore
+README.md
