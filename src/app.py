@@ -27,7 +27,8 @@ def upload_file():
     
     if file and file.filename.endswith('.bmp'):
         try:
-            app.logger.debug('Attempting to open the BMP file')
+            app.logger.debug(f'Attempting to open BMP file of size: {len(file.read())} bytes')
+            file.stream.seek(0)
             img = Image.open(file.stream)
             app.logger.debug('BMP file opened successfully')
             
