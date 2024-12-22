@@ -1,5 +1,5 @@
 from flask import Flask, request, send_file
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 import io
 import logging
 import os
@@ -25,28 +25,35 @@ def upload_file():
         app.logger.error('No selected file')
         return 'No selected file', 400
     
-    if file and file.filename.endswith('.bmp'):
-        try:
-            app.logger.debug(f'Attempting to open BMP file of size: {len(file.read())} bytes')
-            file.stream.seek(0)
-            img = Image.open(file.stream)
-            app.logger.debug('BMP file opened successfully')
-            
-            img = img.convert('RGB')
-            app.logger.debug('Image converted to RGB')
-            
-            img_io = io.BytesIO()
-            img.save(img_io, 'JPEG')
-            img_io.seek(0)
-            app.logger.debug('Image saved as JPEG')
-            
-            return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name='converted_image.jpg')
-        except UnidentifiedImageError:
-            app.logger.error('Cannot identify image file')
-            return 'Cannot identify image file', 400
-    
-    app.logger.error('Invalid file format')
-    return 'Invalid file format', 400
+    try:
+        # Parse raw RGB data (32x24 dimensions as an example, adjust to your case)
+        width, height = 32, 24
+        app.logger.debug('Attempting to process raw RGB data')
+
+        # Read raw RGB data from the uploaded file
+        raw_data = file.read()
+        if len(raw_data) != width * height * 3:
+            app.logger.error('Invalid RGB data size')
+            return 'Invalid RGB data size', 400
+
+        # Convert raw RGB data into a PIL Image
+        img = Image.frombytes('RGB', (width, height), raw_data)
+        app.logger.debug('RGB image created successfully')
+
+        # Scale up the image (optional)
+        img = img.resize((320, 240), Image.BICUBIC)
+        app.logger.debug('Image scaled up successfully')
+
+        # Convert to JPEG
+        img_io = io.BytesIO()
+        img.save(img_io, 'JPEG')
+        img_io.seek(0)
+        app.logger.debug('Image saved as JPEG')
+
+        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name='converted_image.jpg')
+    except Exception as e:
+        app.logger.error(f'Error processing RGB data: {e}')
+        return f'Error processing RGB data: {e}', 400
 
 if __name__ == '__main__':
     app.logger.debug('Starting the Flask application')
