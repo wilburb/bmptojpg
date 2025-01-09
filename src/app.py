@@ -46,7 +46,7 @@ def upload_raw_rgb():
         app.logger.debug('RGB image created successfully')
 
         # Scale up the image (optional)
-        img = img.resize((320, 240), Image.BICUBIC)
+        img = img.resize((640, 480), Image.BICUBIC)
         app.logger.debug('Image scaled up successfully')
 
         # Convert to JPEG and save it to a BytesIO stream
