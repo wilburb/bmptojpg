@@ -1,8 +1,9 @@
-from flask import Flask, request, send_file, abort
+from flask import Flask, request, send_file, abort, jsonify
 from PIL import Image
 import io
 import logging
 import os
+import requests
 
 app = Flask(__name__)
 
@@ -14,8 +15,8 @@ logging.basicConfig(level=logging.DEBUG if debug_mode else logging.INFO)
 SAVE_DIR = "./converted_images"
 os.makedirs(SAVE_DIR, exist_ok=True)  # Ensure the directory exists
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
+@app.route('/upload-raw-rgb', methods=['POST'])
+def upload_raw_rgb():
     app.logger.debug('Received request to /upload endpoint')
     
     if 'file' not in request.files:
@@ -59,12 +60,33 @@ def upload_file():
         img.save(save_path, 'JPEG')
         app.logger.info(f'Converted JPEG saved to disk at {save_path}')
 
+        upload_image_to_connect(img_io, "thermal-prusa-xl", "gXa9ZsygqrKJRc7IMGjS")
+
         # Return the JPEG as a response
-        return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name='converted_image.jpg')
+        return jsonify({'message': 'Success'}), 200
+        #return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name='converted_image.jpg')
 
     except Exception as e:
         app.logger.error(f'Error processing RGB data: {e}')
         return f'Error processing RGB data: {e}', 400
+
+def upload_image_to_connect(image, fingerprint, token):
+    headers = {
+                'accept': '*/*',
+                'content-type': 'image/jpg',
+                'fingerprint': fingerprint,
+                'token': token
+            }
+    response = requests.request('PUT', 'https://webcam.connect.prusa3d.com/c/snapshot', headers=headers, data=image)
+    return response
+
+@app.route('/connect-upload-test', methods=['POST'])
+def connect_upload_test():
+    # Read the image file as binary
+    with open("./test.jpg", "rb") as image_file:
+        # Prepare the PUT request with the image data
+        response = upload_image_to_connect(image_file, "thermal-prusa-xl", "gXa9ZsygqrKJRc7IMGjS")
+    return jsonify({'message': 'Success'}), 200
 
 # Endpoint to retrieve the latest saved image (DEBUG only)
 if debug_mode:
