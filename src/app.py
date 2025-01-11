@@ -54,7 +54,7 @@ def add_rgb_key(image, min_temp, max_temp, width=640, height=480, key_height=40,
         font = ImageFont.truetype("Arial Black.ttf", 24)
     except IOError:
         # Fallback to default font (not resizable)
-        print("TTF font not found. Using default font.")
+        app.logger.info("TTF font not found. Using default font.")
         font = ImageFont.load_default()
 
     # Define positions for min, mid, and max labels
@@ -159,7 +159,7 @@ def upload_raw_thermal():
         img_io.seek(0)
         save_path = os.path.join(SAVE_DIR, 'converted_image.jpg')
         key_img.save(save_path, 'JPEG')
-        app.logger.info(f'Converted JPEG saved to disk at {save_path}')
+        app.logger.debug(f'Converted JPEG saved to disk at {save_path}')
         upload_image_to_connect(img_io, "thermal-prusa-xl", "gXa9ZsygqrKJRc7IMGjS")
 
         return jsonify({'message': 'Success'}), 200
@@ -211,7 +211,7 @@ def upload_raw_rgb():
         # Save the JPEG to disk
         save_path = os.path.join(SAVE_DIR, 'converted_image.jpg')
         img.save(save_path, 'JPEG')
-        app.logger.info(f'Converted JPEG saved to disk at {save_path}')
+        app.logger.debug(f'Converted JPEG saved to disk at {save_path}')
 
         upload_image_to_connect(img_io, "thermal-prusa-xl", "gXa9ZsygqrKJRc7IMGjS")
 
@@ -252,7 +252,7 @@ if debug_mode:
             app.logger.error('No latest image available')
             return 'No latest image available', 404
 
-        app.logger.info(f'Serving latest image from {latest_image_path}')
+        app.logger.debug(f'Serving latest image from {latest_image_path}')
         return send_file(latest_image_path, mimetype='image/jpeg', as_attachment=True, download_name='converted_image.jpg')
 
 if __name__ == '__main__':
