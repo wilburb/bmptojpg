@@ -15,6 +15,18 @@ logging.basicConfig(level=logging.DEBUG if debug_mode else logging.INFO)
 SAVE_DIR = "./converted_images"
 os.makedirs(SAVE_DIR, exist_ok=True)  # Ensure the directory exists
 
+@app.route('/upload-raw-thermal', methods=['POST'])
+def upload_raw_thermal():
+    app.logger.debug('Received request to /upload-raw-thermal endpoint')
+    
+    if not request.is_json:
+        app.logger.error('Request does not contain JSON')
+        return 'Request does not contain JSON', 400
+    
+    data = request.get_json()
+    app.logger.debug(f'Received JSON data: {data}')
+    return jsonify({'message': 'JSON received successfully'}), 200
+
 @app.route('/upload-raw-rgb', methods=['POST'])
 def upload_raw_rgb():
     app.logger.debug('Received request to /upload endpoint')
