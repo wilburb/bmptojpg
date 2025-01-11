@@ -128,21 +128,28 @@ def upload_raw_thermal():
     if not request.is_json:
         app.logger.error('Request does not contain JSON')
         return 'Request does not contain JSON', 400
-    
+
     data = request.get_json()
     app.logger.debug(f'Received JSON data: {data}')
-    
-    # Assuming the JSON data is a list of thermal values
-    if not isinstance(data, list):
-        app.logger.error('Invalid data format, expected a list')
-        return 'Invalid data format, expected a list', 400
-    
-    thermal_data = data
-    if not thermal_data:
-        app.logger.error('No thermal data found in the request')
-        return 'No thermal data found', 400
-    
+
+    # Validate JSON payload
+    if not isinstance(data, dict) or 'image' not in data or 'timestamp' not in data:
+        app.logger.error('Invalid data format, expected an object with "image" and "timestamp" keys')
+        return 'Invalid data format, expected an object with "image" and "timestamp" keys', 400
+
+    # Extract thermal image data and timestamp
+    thermal_data = data.get('image')
+    timestamp = data.get('timestamp')
+
+    # Validate thermal image data
+    if not isinstance(thermal_data, list) or not thermal_data:
+        app.logger.error('Invalid or missing thermal data in the request')
+        return 'Invalid or missing thermal data', 400
+
     try:
+        # Log timestamp for debugging
+        app.logger.debug(f'Timestamp of thermal data: {timestamp}')
+
         # Convert thermal data to RGB
         rgb_data = map_thermal_to_rgb(thermal_data)
         app.logger.debug('Thermal data converted to RGB successfully')
@@ -160,6 +167,8 @@ def upload_raw_thermal():
         save_path = os.path.join(SAVE_DIR, 'converted_image.jpg')
         key_img.save(save_path, 'JPEG')
         app.logger.debug(f'Converted JPEG saved to disk at {save_path}')
+        
+        # Upload image with metadata
         upload_image_to_connect(img_io, "thermal-prusa-xl", "gXa9ZsygqrKJRc7IMGjS")
 
         return jsonify({'message': 'Success'}), 200
